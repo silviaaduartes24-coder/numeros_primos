@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificador de Números Primos</title>
+    <!-- Importar Tailwind CSS para los estilos -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Importar fuente de Google -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f5f1ea; /* Fondo beige */
+        }
+        
+        /* Fondo con patrón dinámico de líneas fluidas */
+        .fluid-pattern {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            background-image: url("data:image/svg+xml,%3Csvg width='300' height='150' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0,75 Q75,0 150,75 T300,75' fill='none' stroke='%23e0d6c1' stroke-width='1.5'/%3E%3Cpath d='M0,110 Q75,35 150,110 T300,110' fill='none' stroke='%23e0d6c1' stroke-width='1' opacity='0.7'/%3E%3Cpath d='M0,40 Q75,115 150,40 T300,40' fill='none' stroke='%23e0d6c1' stroke-width='1' opacity='0.5'/%3E%3C/svg%3E");
+            background-size: 300px 150px;
+            animation: moveFluid 20s linear infinite;
+        }
+
+        @keyframes moveFluid {
+            0% { background-position: 0 0; }
+            100% { background-position: -300px -150px; }
+        }
+
+        /* Tipografía serifada para la tarjeta */
+        .font-serif-elegant {
+            font-family: 'Lora', serif;
+        }
+
+        /* Animación suave para mostrar los resultados */
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Estilos personalizados para el input */
+        .custom-input {
+            background-color: #faf9f6;
+            border-color: #d6cfc1;
+            color: #4a3f35;
+        }
+        .custom-input:focus {
+            border-color: #8b7e66;
+            ring-color: #8b7e66;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+
+    <!-- Capa del patrón dinámico de líneas -->
+    <div class="fluid-pattern"></div>
+
+    <!-- Contenedor principal de la tarjeta -->
+    <div class="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md font-serif-elegant relative z-10 border border-[#e5dfd3]">
+        
+        <!-- Encabezado -->
+        <div class="text-center mb-8">
+            <div class="bg-[#f0ece3] text-[#8b7e66] w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+            </div>
+            <h1 class="text-2xl font-bold text-[#4a3f35]">Números Primos</h1>
+            <p class="text-sm text-[#8b7e66] mt-2">Ingresa un número entero para verificar si es primo o compuesto.</p>
+        </div>
+
+        <!-- Formulario de entrada -->
+        <div class="space-y-4">
+            <div>
+                <label for="numberInput" class="block text-sm font-medium text-[#4a3f35] mb-1">Número a verificar:</label>
+                <input 
+                    type="number" 
+                    id="numberInput" 
+                    class="custom-input w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-[#8b7e66] outline-none transition-all placeholder-[#c2b9a7]"
+                    placeholder="Ej. 7, 13, 42..."
+                    onkeypress="manejarEnter(event)"
+                >
+            </div>
+            
+            <button 
+                onclick="verificarNumero()" 
+                class="w-full bg-[#8b7e66] hover:bg-[#6f6452] text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 shadow-md focus:ring-2 focus:ring-offset-2 focus:ring-[#8b7e66]">
+                Verificar
+            </button>
+        </div>
+
+        <!-- Contenedor del resultado -->
+        <div id="resultContainer" class="mt-6 hidden rounded-lg p-4 text-center">
+            <span id="resultIcon" class="block text-4xl mb-2"></span>
+            <p id="resultText" class="text-lg font-medium"></p>
+            <p id="resultDetails" class="text-sm mt-1"></p>
+        </div>
+
+    </div>
+
+    <!-- Créditos -->
+    <div class="fixed bottom-4 right-5 text-[#8b7e66] text-sm font-serif-elegant z-10 opacity-80 pointer-events-none text-right">
+        Hecho por Silvia Duarte,<br>asistido por IA
+    </div>
+
+    <!-- Lógica en JavaScript -->
+    <script>
+        // Función principal para verificar si un número es primo
+        function esPrimo(numero) {
+            if (numero <= 1) return false;
+            if (numero <= 3) return true;
+            if (numero % 2 === 0 || numero % 3 === 0) return false;
+            for (let i = 5; i * i <= numero; i += 6) {
+                if (numero % i === 0 || numero % (i + 2) === 0) return false;
+            }
+            return true;
+        }
+
+        // Función que maneja la interacción de la interfaz
+        function verificarNumero() {
+            const inputElement = document.getElementById('numberInput');
+            const resultContainer = document.getElementById('resultContainer');
+            const resultText = document.getElementById('resultText');
+            const resultDetails = document.getElementById('resultDetails');
+            const resultIcon = document.getElementById('resultIcon');
+            
+            const valorInput = inputElement.value.trim();
+
+            // Reiniciar animación
+            resultContainer.classList.remove('fade-in');
+            void resultContainer.offsetWidth; 
+            resultContainer.classList.add('fade-in');
+
+            if (valorInput === '') {
+                mostrarResultado(
+                    resultContainer, resultText, resultDetails, resultIcon,
+                    'bg-[#fcfaf2]', 'text-[#8b7e66]', '📜',
+                    'Por favor, ingresa un número.',
+                    ''
+                );
+                return;
+            }
+
+            const numero = Number(valorInput);
+
+            if (!Number.isInteger(numero)) {
+                mostrarResultado(
+                    resultContainer, resultText, resultDetails, resultIcon,
+                    'bg-[#fcfaf2]', 'text-[#4a3f35]', '🖋️',
+                    'Solo se permiten números enteros.',
+                    'Los decimales no entran en esta categoría.'
+                );
+                return;
+            }
+
+            let detalleAdicional = '';
+            if (numero === 0 || numero === 1) {
+                detalleAdicional = `Por definición, el ${numero} no es un número primo.`;
+            } else if (numero < 0) {
+                detalleAdicional = 'Los números primos deben ser mayores que 1.';
+            }
+
+            if (esPrimo(numero)) {
+                mostrarResultado(
+                    resultContainer, resultText, resultDetails, resultIcon,
+                    'bg-[#f5f1ea]', 'text-[#4a3f35]', '✨',
+                    `¡El ${numero} es un número primo!`,
+                    'Su esencia es indivisible, excepto por sí mismo y la unidad.'
+                );
+            } else {
+                mostrarResultado(
+                    resultContainer, resultText, resultDetails, resultIcon,
+                    'bg-[#efebe3]', 'text-[#6f6452]', '🍂',
+                    `El ${numero} no es un número primo.`,
+                    detalleAdicional || 'Posee múltiples divisores en su estructura.'
+                );
+            }
+        }
+
+        function mostrarResultado(contenedor, textoEl, detalleEl, iconoEl, colorFondo, colorTexto, icono, textoPrincipal, textoDetalle) {
+            contenedor.className = `mt-6 fade-in rounded-lg p-4 text-center border border-[#e5dfd3] ${colorFondo} ${colorTexto}`;
+            iconoEl.textContent = icono;
+            textoEl.textContent = textoPrincipal;
+            detalleEl.textContent = textoDetalle;
+            contenedor.classList.remove('hidden');
+        }
+
+        function manejarEnter(evento) {
+            if (evento.key === 'Enter') {
+                verificarNumero();
+            }
+        }
+    </script>
+</body>
+</html>
